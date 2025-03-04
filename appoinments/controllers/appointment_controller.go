@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"findMyDoc/appoinments/usecases"
 	"findMyDoc/internal/entities"
+	"findMyDoc/internal/utils"
 	"net/http"
 
 	"strconv"
@@ -22,11 +23,22 @@ func NewAppointmentController(uc usecases.AppointmentUsecase) *AppointmentContro
 }
 
 func (c *AppointmentController) BookAppointmentHandler(w http.ResponseWriter, r *http.Request) {
+
+	authHeader := r.Header.Get("Authorization")
+	userID, error := utils.ExtractUserIDFromToken(authHeader)
+
+	if error != nil {
+		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		return
+	}
+
 	var appointment entities.Appointment
 	if err := json.NewDecoder(r.Body).Decode(&appointment); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
+
+	appointment.PatientID = userID
 
 	err := c.usecase.BookAppointment(&appointment)
 	if err != nil {

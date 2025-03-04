@@ -11,7 +11,6 @@ import (
 )
 
 type UserUsecase interface {
-	// RegisterUser(email, password string) error
 	LoginUser(email, password string) (string, error)
 	RegisterUser(req requests.RegisterRequest) error
 }
