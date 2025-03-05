@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -9,7 +8,7 @@ import (
 )
 
 
-func ExtractUserIDFromToken(authHeader string) (int, error) {
+func ExtractUserIDFromToken(authHeader string) (int) {
 
 	var jwtSecret = []byte("find_my_doc")
 
@@ -25,16 +24,16 @@ func ExtractUserIDFromToken(authHeader string) (int, error) {
 	})
 
 	if err != nil {
-		return 0, err
+		return 0
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		userIDFloat, ok := claims["user_id"].(float64)
 		if !ok {
-			return 0, errors.New("user_id not found in token")
+			return 0
 		}
-		return int(userIDFloat), nil
+		return int(userIDFloat)
 	}
 
-	return 0, errors.New("invalid token")
+	return 0
 }

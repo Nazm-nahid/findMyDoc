@@ -59,9 +59,9 @@ func main() {
 		r.Use(middlewares.JWTMiddleware)
 		r.Get("/doctors", doctorController.SearchDoctors) // search doctor
 		r.Post("/appointments", appointmentController.BookAppointmentHandler) // book an appoinment
-		r.Get("/doctors/{id}/appointments/pending", appointmentController.GetPendingAppointmentsHandler) // pending appoinment list
+		r.Get("/doctors/appointments/pending", appointmentController.GetPendingAppointmentsHandler) // pending appoinment list
 		r.Patch("/appointments/{id}/accept", appointmentController.AcceptAppointmentHandler) // accept appoinment
-		r.Get("/doctors/{id}/appointments/accepted", appointmentController.GetAcceptedAppointmentsHandler) // accepted appoinment list
+		r.Get("/doctors/appointments/accepted", appointmentController.GetAcceptedAppointmentsHandler) // accepted appoinment list
 	})
 
 	// Start server

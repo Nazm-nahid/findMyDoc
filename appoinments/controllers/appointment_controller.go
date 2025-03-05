@@ -25,12 +25,7 @@ func NewAppointmentController(uc usecases.AppointmentUsecase) *AppointmentContro
 func (c *AppointmentController) BookAppointmentHandler(w http.ResponseWriter, r *http.Request) {
 
 	authHeader := r.Header.Get("Authorization")
-	userID, error := utils.ExtractUserIDFromToken(authHeader)
-
-	if error != nil {
-		http.Error(w, "Invalid token", http.StatusUnauthorized)
-		return
-	}
+	userID := utils.ExtractUserIDFromToken(authHeader)
 
 	var appointment entities.Appointment
 	if err := json.NewDecoder(r.Body).Decode(&appointment); err != nil {
@@ -51,12 +46,9 @@ func (c *AppointmentController) BookAppointmentHandler(w http.ResponseWriter, r 
 }
 
 func (c *AppointmentController) GetPendingAppointmentsHandler(w http.ResponseWriter, r *http.Request) {
-	doctorIDStr := chi.URLParam(r, "id")
-	doctorID, err := strconv.Atoi(doctorIDStr)
-	if err != nil {
-		http.Error(w, "Invalid doctor ID", http.StatusBadRequest)
-		return
-	}
+	
+	authHeader := r.Header.Get("Authorization")
+	doctorID := utils.ExtractUserIDFromToken(authHeader)
 
 	appointments, err := c.usecase.GetPendingAppointments(doctorID)
 	if err != nil {
@@ -87,12 +79,8 @@ func (c *AppointmentController) AcceptAppointmentHandler(w http.ResponseWriter, 
 }
 
 func (c *AppointmentController) GetAcceptedAppointmentsHandler(w http.ResponseWriter, r *http.Request) {
-	doctorIDStr := chi.URLParam(r, "id")
-	doctorID, err := strconv.Atoi(doctorIDStr)
-	if err != nil {
-		http.Error(w, "Invalid doctor ID", http.StatusBadRequest)
-		return
-	}
+	authHeader := r.Header.Get("Authorization")
+	doctorID := utils.ExtractUserIDFromToken(authHeader)
 
 	appointments, err := c.usecase.GetAcceptedAppointments(doctorID)
 	if err != nil {
