@@ -43,11 +43,15 @@ func (c *UserController) RegisterHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if err := c.usecase.RegisterUser(req); err != nil {
+	token, err := c.usecase.RegisterUser(req);
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{"message": "User registered successfully"})
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "User registered successfully",
+		"token": token,
+	})
 }

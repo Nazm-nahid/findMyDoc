@@ -11,9 +11,10 @@ import (
 var jwtSecret = []byte("find_my_doc")
 
 // GenerateToken creates a JWT token
-func GenerateToken(userID int) (string, error) {
+func GenerateToken(userID int, role string) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
+		"role":    role,
 		"exp":     time.Now().Add(time.Hour * 72).Unix(), // 3 days expiry
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
