@@ -8,6 +8,7 @@ import (
 
 type DoctorRepository interface {
 	SearchDoctors(speciality string, latitude, longitude float64) ([]entities.Doctor, error)
+	GetDoctorById(id int) (entities.Doctor, error)
 }
 
 type doctorRepository struct {
@@ -36,4 +37,12 @@ func (r *doctorRepository) SearchDoctors(speciality string, latitude, longitude 
 	}
 
 	return filteredDoctors, nil
+}
+
+func (r *doctorRepository) GetDoctorById(id int) (entities.Doctor, error) {
+	var doctor entities.Doctor
+	if err := r.db.Where("user_id = ?", id).Find(&doctor).Error; err != nil {
+		return doctor, err
+	}
+	return doctor, nil
 }

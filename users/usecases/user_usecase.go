@@ -45,7 +45,7 @@ func (uc *userUsecase) RegisterUser(req requests.RegisterRequest) (string, error
 	// Create doctor or patient profile
 	if req.Role == "doctor" {
 		doctor := entities.Doctor{
-			UserID:     int(user.ID),
+			ID:     int(user.ID),
 			Name:       req.Name,
 			Speciality: req.Speciality,
 			Latitude:   req.Latitude,
@@ -57,7 +57,7 @@ func (uc *userUsecase) RegisterUser(req requests.RegisterRequest) (string, error
 		}
 	} else if req.Role == "patient" {
 		patient := entities.Patient{
-			UserID:  int(user.ID),
+			ID:  int(user.ID),
 			Name:    req.Name,
 			Ratings: 0.0,
 		}

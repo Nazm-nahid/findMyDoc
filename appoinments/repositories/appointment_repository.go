@@ -38,6 +38,10 @@ func (r *appointmentRepository) UpdateAppointmentStatus(appointmentID int, statu
 
 func (r *appointmentRepository) GetAppointmentsByStatus(doctorID int, status string) ([]entities.Appointment, error) {
 	var appointments []entities.Appointment
-	err := r.db.Where("doctor_id = ? AND status = ?", doctorID, status).Find(&appointments).Error
+	err := r.db.
+		Preload("Doctor").
+		Preload("Patient").
+		Where("doctor_id = ? AND status = ?", doctorID, status).
+		Find(&appointments).Error
 	return appointments, err
 }
