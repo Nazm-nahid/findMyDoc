@@ -3,6 +3,7 @@ package repositories
 import (
 	"findMyDoc/internal/entities"
 	"findMyDoc/internal/utils"
+
 	"gorm.io/gorm"
 )
 
@@ -33,13 +34,12 @@ func (r *doctorRepository) SearchDoctors(speciality string, latitude, longitude 
 			return nil, err
 		}
 	}
-	
 
 	// Filter doctors by location (within 1km)
 	var filteredDoctors []entities.Doctor
 	for _, doc := range doctors {
 		distance := utils.CalculateDistance(latitude, longitude, doc.Latitude, doc.Longitude)
-		if distance <= 1.0 {
+		if distance <= 10.0 {
 			filteredDoctors = append(filteredDoctors, doc)
 		}
 	}
