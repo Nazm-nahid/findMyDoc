@@ -23,9 +23,17 @@ func NewDoctorRepository(db *gorm.DB) DoctorRepository {
 
 func (r *doctorRepository) SearchDoctors(speciality string, latitude, longitude float64) ([]entities.Doctor, error) {
 	var doctors []entities.Doctor
-	if err := r.db.Where("speciality = ?", speciality).Find(&doctors).Error; err != nil {
-		return nil, err
+
+	if speciality == "" {
+		if err := r.db.Find(&doctors).Error; err != nil {
+			return nil, err
+		}
+	} else {
+		if err := r.db.Where("speciality = ?", speciality).Find(&doctors).Error; err != nil {
+			return nil, err
+		}
 	}
+	
 
 	// Filter doctors by location (within 1km)
 	var filteredDoctors []entities.Doctor
