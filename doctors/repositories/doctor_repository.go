@@ -35,7 +35,7 @@ func (r *doctorRepository) SearchDoctors(speciality string, latitude, longitude 
 		}
 	}
 
-	// Filter doctors by location (within 1km)
+	// Filter doctors by location (within 10km)
 	var filteredDoctors []entities.Doctor
 	for _, doc := range doctors {
 		distance := utils.CalculateDistance(latitude, longitude, doc.Latitude, doc.Longitude)
@@ -49,7 +49,7 @@ func (r *doctorRepository) SearchDoctors(speciality string, latitude, longitude 
 
 func (r *doctorRepository) GetDoctorById(id int) (entities.Doctor, error) {
 	var doctor entities.Doctor
-	if err := r.db.Where("user_id = ?", id).Find(&doctor).Error; err != nil {
+	if err := r.db.Where("id = ?", id).Find(&doctor).Error; err != nil {
 		return doctor, err
 	}
 	return doctor, nil

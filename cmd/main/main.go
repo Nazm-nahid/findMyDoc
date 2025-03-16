@@ -17,6 +17,8 @@ import doctorsControllers "findMyDoc/doctors/controllers"
 import doctorsUsecases "findMyDoc/doctors/usecases"
 import doctorsRepositories "findMyDoc/doctors/repositories"
 
+import patientsRepositories "findMyDoc/patients/repositories"
+
 import appointmentsControllers "findMyDoc/appoinments/controllers"
 import appointmentsUsecases "findMyDoc/appoinments/usecases"
 import appointmentsRepositories "findMyDoc/appoinments/repositories"
@@ -38,6 +40,8 @@ func main() {
 	doctorUsecase := doctorsUsecases.NewDoctorUsecase(doctorRepo)
 	doctorController := doctorsControllers.NewDoctorController(doctorUsecase)
 
+	patientRepo := patientsRepositories.NewPatientRepository(database)
+
 	// Setup appointment-related components
 	appointmentRepo := appointmentsRepositories.NewAppointmentRepository(database)
 	appointmentUsecase := appointmentsUsecases.NewAppointmentUsecase(appointmentRepo)
@@ -46,7 +50,7 @@ func main() {
 	// User authentication setup
 	userRepo := usersRepositories.NewUserRepository(database)
 	userUsecase := usersUsecases.NewUserUsecase(userRepo)
-	userController := usersControllers.NewUserController(userUsecase)
+	userController := usersControllers.NewUserController(userUsecase , doctorRepo, patientRepo)
 
 
 	// Setup router
@@ -62,6 +66,7 @@ func main() {
 		r.Get("/doctors/appointments/pending", appointmentController.GetPendingAppointmentsHandler) // pending appoinment list
 		r.Patch("/appointments/{id}/accept", appointmentController.AcceptAppointmentHandler) // accept appoinment
 		r.Get("/doctors/appointments/accepted", appointmentController.GetAcceptedAppointmentsHandler) // accepted appoinment list
+		r.Get("/profile", userController.GetProfile) // get profile
 	})
 
 	// Start server
