@@ -68,7 +68,7 @@ func main() {
 	userUsecase := usersUsecases.NewUserUsecase(userRepo, emailService, appHost)
 	userController := usersControllers.NewUserController(userUsecase, doctorRepo, patientRepo, userRepo)
 
-	deepSeek := aisearch.NewDeepSeekService("sk-310fda9f693a4da7a16dd92a96a48e40")
+	deepSeek := aisearch.NewDeepSeekService("#")
 	diagnosisHandler := aisearch.NewDiagnosisHandler(deepSeek)
 
 	// Setup router
