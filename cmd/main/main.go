@@ -4,28 +4,36 @@ import (
 	"log"
 	"net/http"
 
-
 	"findMyDoc/pkg/db"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	"findMyDoc/pkg/aisearch"
+	"findMyDoc/pkg/email"
+
 	"findMyDoc/middlewares"
+
+	doctorsControllers "findMyDoc/doctors/controllers"
+
+	doctorsUsecases "findMyDoc/doctors/usecases"
+
+	doctorsRepositories "findMyDoc/doctors/repositories"
+
+	patientsRepositories "findMyDoc/patients/repositories"
+
+	appointmentsControllers "findMyDoc/appoinments/controllers"
+
+	appointmentsUsecases "findMyDoc/appoinments/usecases"
+
+	appointmentsRepositories "findMyDoc/appoinments/repositories"
+
+	usersControllers "findMyDoc/users/controllers"
+
+	usersUsecases "findMyDoc/users/usecases"
+
+	usersRepositories "findMyDoc/users/repositories"
 )
-
-import doctorsControllers "findMyDoc/doctors/controllers"
-import doctorsUsecases "findMyDoc/doctors/usecases"
-import doctorsRepositories "findMyDoc/doctors/repositories"
-
-import patientsRepositories "findMyDoc/patients/repositories"
-
-import appointmentsControllers "findMyDoc/appoinments/controllers"
-import appointmentsUsecases "findMyDoc/appoinments/usecases"
-import appointmentsRepositories "findMyDoc/appoinments/repositories"
-
-import usersControllers "findMyDoc/users/controllers"
-import usersUsecases "findMyDoc/users/usecases"
-import usersRepositories "findMyDoc/users/repositories"
 
 func main() {
 	// Setup database connection
@@ -47,29 +55,41 @@ func main() {
 	appointmentUsecase := appointmentsUsecases.NewAppointmentUsecase(appointmentRepo)
 	appointmentController := appointmentsControllers.NewAppointmentController(appointmentUsecase)
 
-	// User authentication setup
-	userRepo := usersRepositories.NewUserRepository(database)
-	userUsecase := usersUsecases.NewUserUsecase(userRepo)
-	userController := usersControllers.NewUserController(userUsecase , doctorRepo, patientRepo)
+	// Load SMTP credentials from environment variables
+	smtpHost := "smtp.gmail.com"
+	smtpPort := "587"
+	smtpEmail := "heyno143@gmail.com"
+	smtpPass := "vmig eyey hqyc mpje"
+	appHost := "http://localhost:3001"
 
+	// User authentication setup
+	emailService := email.NewSMTPService(smtpHost, smtpPort, smtpEmail, smtpPass)
+	userRepo := usersRepositories.NewUserRepository(database)
+	userUsecase := usersUsecases.NewUserUsecase(userRepo, emailService, appHost)
+	userController := usersControllers.NewUserController(userUsecase, doctorRepo, patientRepo, userRepo)
+
+	deepSeek := aisearch.NewDeepSeekService("sk-310fda9f693a4da7a16dd92a96a48e40")
+	diagnosisHandler := aisearch.NewDiagnosisHandler(deepSeek)
 
 	// Setup router
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Post("/register", userController.RegisterHandler)
 	r.Post("/login", userController.LoginHandler)
+	r.Get("/verify", userController.VerifyEmail)
+	r.Post("/suggest-doctor", diagnosisHandler.SuggestHandler)
 
 	r.Route("/api", func(r chi.Router) {
 		r.Use(middlewares.JWTMiddleware)
-		r.Get("/doctors", doctorController.SearchDoctors) // search doctor
-		r.Post("/appointments", appointmentController.BookAppointmentHandler) // book an appoinment
-		r.Get("/doctors/appointments/pending", appointmentController.GetPendingAppointmentsHandler) // pending appoinment list
-		r.Patch("/appointments/{id}/accept", appointmentController.AcceptAppointmentHandler) // accept appoinment
+		r.Get("/doctors", doctorController.SearchDoctors)                                             // search doctor
+		r.Post("/appointments", appointmentController.BookAppointmentHandler)                         // book an appoinment
+		r.Get("/doctors/appointments/pending", appointmentController.GetPendingAppointmentsHandler)   // pending appoinment list
+		r.Patch("/appointments/{id}/accept", appointmentController.AcceptAppointmentHandler)          // accept appoinment
 		r.Get("/doctors/appointments/accepted", appointmentController.GetAcceptedAppointmentsHandler) // accepted appoinment list
-		r.Get("/profile", userController.GetProfile) // get profile
+		r.Get("/profile", userController.GetProfile)                                                  // get profile
 	})
 
 	// Start server
-	log.Println("Server running on port 3001")
-	http.ListenAndServe(":3001", r)
+	log.Println("Server running on port 3000")
+	http.ListenAndServe(":3000", r)
 }

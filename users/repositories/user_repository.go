@@ -12,6 +12,8 @@ type UserRepository interface {
 	CreateDoctor(doctor *entities.Doctor) error
 	CreatePatient(patient *entities.Patient) error
 	GetUserRoleByUserId(id int) string
+	GetByVerificationCode(code string) (*entities.User, error)
+	Update(user *entities.User) error
 }
 
 type userRepository struct {
@@ -44,4 +46,14 @@ func (r *userRepository) CreateDoctor(doctor *entities.Doctor) error {
 
 func (r *userRepository) CreatePatient(patient *entities.Patient) error {
 	return r.db.Create(patient).Error
+}
+
+func (r *userRepository) Update(user *entities.User) error {
+	return r.db.Save(user).Error
+}
+
+func (r *userRepository) GetByVerificationCode(code string) (*entities.User, error) {
+	var user entities.User
+	err := r.db.Where("verification_code = ?", code).First(&user).Error
+	return &user, err
 }

@@ -2,23 +2,27 @@ package controllers
 
 import (
 	"encoding/json"
-	"findMyDoc/users/usecases"
-	"findMyDoc/users/requests"
-	"net/http"
 	"findMyDoc/internal/utils"
+	"findMyDoc/users/requests"
+	"findMyDoc/users/usecases"
+	"net/http"
+
+	doctorsRepositories "findMyDoc/doctors/repositories"
+
+	patientsRepositories "findMyDoc/patients/repositories"
+
+	usersRepositories "findMyDoc/users/repositories"
 )
 
-import doctorsRepositories "findMyDoc/doctors/repositories"
-import patientsRepositories "findMyDoc/patients/repositories"
-
 type UserController struct {
-	usecase usecases.UserUsecase
-	doctorsRepositories doctorsRepositories.DoctorRepository
+	usecase              usecases.UserUsecase
+	doctorsRepositories  doctorsRepositories.DoctorRepository
 	patientsRepositories patientsRepositories.PatientRepository
+	usersRepositories    usersRepositories.UserRepository
 }
 
-func NewUserController(uc usecases.UserUsecase ,dc doctorsRepositories.DoctorRepository, pc patientsRepositories.PatientRepository) *UserController {
-	return &UserController{usecase: uc , doctorsRepositories: dc , patientsRepositories: pc}
+func NewUserController(uc usecases.UserUsecase, dc doctorsRepositories.DoctorRepository, pc patientsRepositories.PatientRepository, ur usersRepositories.UserRepository) *UserController {
+	return &UserController{usecase: uc, doctorsRepositories: dc, patientsRepositories: pc,usersRepositories: ur}
 }
 
 func (c *UserController) LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +53,7 @@ func (c *UserController) RegisterHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	token, err := c.usecase.RegisterUser(req);
+	err := c.usecase.RegisterUser(req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -57,8 +61,37 @@ func (c *UserController) RegisterHandler(w http.ResponseWriter, r *http.Request)
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{
-		"message": "User registered successfully",
-		"token": token,
+		"message": "User registered successfully!! Please verify your email!!",
+	})
+}
+
+func (c *UserController) VerifyEmail(w http.ResponseWriter, r *http.Request) {
+	code := r.URL.Query().Get("code")
+	if code == "" {
+		http.Error(w, "Verification code is required", http.StatusBadRequest)
+		return
+	}
+
+	// Step 1: Find user by verification code
+	user, err := c.usersRepositories.GetByVerificationCode(code)
+	if err != nil || user == nil || user.ID == 0 {
+		http.Error(w, "Invalid or expired verification code", http.StatusBadRequest)
+		return
+	}
+
+	// Step 2: Update user verification status
+	user.IsVerified = true
+	user.VerificationCode = ""
+
+	if err := c.usersRepositories.Update(user); err != nil {
+		http.Error(w, "Failed to verify user", http.StatusInternalServerError)
+		return
+	}
+
+	// Step 3: Respond with success
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Email verified successfully",
 	})
 }
 
@@ -86,5 +119,5 @@ func (c *UserController) GetProfile(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(patients)
 	}
-	
+
 }
